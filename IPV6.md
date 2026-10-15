@@ -40,6 +40,32 @@ Na tela inicial, toque em `+` (Add new Host) e informe o endereço do PC host:
 Ao parear/abrir a lista de apps, o cliente monta as URLs com colchetes
 automaticamente.
 
+## Como compilar
+
+### Opção A — GitHub Actions (não precisa instalar nada)
+
+1. Suba este branch (`ipv6-support`) para o **seu fork** no GitHub.
+2. Em `Actions`, rode o workflow `MSBuild` (ou dê push para `master` do fork).
+3. Baixe o artefato `moonlight-uwp` (contém o `.msixbundle`).
+4. Instale no Xbox em modo dev pelo Device Portal, importando também o
+   certificado autossinizado gerado pelo workflow (`cert.pfx`/`.cer`).
+
+> O workflow foi ajustado para gerar um certificado de teste automaticamente quando
+> ele roda fora do repositório original, permitindo instalar o pacote do seu fork.
+
+### Opção B — Build local
+
+Requer Visual Studio 2022 com o workload **Desenvolvimento para Plataforma Universal
+do Windows (UWP)** e o **Windows 10 SDK (10.0.19041 ou mais novo)**. Depois:
+
+```powershell
+git submodule update --init --recursive
+./setup-dev.ps1
+```
+
+Abra `moonlight-xbox-dx.sln` no Visual Studio e compile a solução (o script já gera
+os projetos de terceiros, baixa as dependências do vcpkg e cria o certificado).
+
 ## Limitações
 
 - **Wake-on-LAN não funciona via IPv6** (broadcast é IPv4). Se o host estiver
