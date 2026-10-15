@@ -47,11 +47,14 @@ automaticamente.
 1. Suba este branch (`ipv6-support`) para o **seu fork** no GitHub.
 2. Em `Actions`, rode o workflow `MSBuild` (ou dê push para `master` do fork).
 3. Baixe o artefato `moonlight-uwp` (contém o `.msixbundle`).
-4. Instale no Xbox em modo dev pelo Device Portal, importando também o
-   certificado autossinizado gerado pelo workflow (`cert.pfx`/`.cer`).
+4. Baixe o `cert.cer` (certificado público) na página de **Release** do fork.
+5. No Xbox (modo dev), pelo Device Portal, confie no `cert.cer` e instale o
+   `.msixbundle`.
 
 > O workflow foi ajustado para gerar um certificado de teste automaticamente quando
 > ele roda fora do repositório original, permitindo instalar o pacote do seu fork.
+> Ao empurrar uma tag `v*` ele também publica um **Release** com o `.msixbundle` e o
+> `cert.cer` anexados (download sem precisar de login).
 
 ### Opção B — Build local
 
@@ -66,19 +69,77 @@ git submodule update --init --recursive
 Abra `moonlight-xbox-dx.sln` no Visual Studio e compile a solução (o script já gera
 os projetos de terceiros, baixa as dependências do vcpkg e cria o certificado).
 
+## Configuração do host (PC)
+
+Para o Xbox conectar via IPv6, o **host** também precisa aceitar conexões IPv6.
+
+### Use o Sunshine (não o GeForce Experience)
+
+O NVIDIA GeForce Experience/GameStream **não escuta em IPv6** (apenas IPv4) e está
+descontinuado. Para IPv6 use o [Sunshine](https://github.com/LizardByte/Sunshine),
+que suporta IPv6 desde a v0.21.0.
+
+No arquivo `sunshine.conf`:
+
+```ini
+# O padrão é "ipv4"! Sem isto o Sunshine não abre nenhum socket IPv6.
+address_family = both
+
+# Opcional: fixa a interface/endereço IPv6 (requer address_family = both).
+# bind_address = 2001:db8::1234
+```
+
+Confirme que existe um socket IPv6 em escuta (deve aparecer `[::]` ou o endereço
+global, e não apenas `0.0.0.0`):
+
+```powershell
+Get-NetTCPConnection -State Listen |
+  Where-Object { $_.LocalPort -in 47984, 47989, 48010 } |
+  Select-Object LocalAddress, LocalPort
+```
+
+### Endereço IPv6 global (obrigatório para redes diferentes)
+
+- Precisa ser **global/roteável** (dentro de `2000::/3`). **Não** serve `fe80::`
+  (link-local) nem `fd00::/8` (ULA) — esses só funcionam no mesmo enlace.
+- Veja o endereço com `ipconfig` (procure "Endereço IPv6", algo como `2804:...`).
+- Teste a conectividade IPv6 a partir da rede do **Xbox** em
+  <https://test-ipv6.com/> (idealmente 10/10).
+
+### Firewall
+
+O instalador do Sunshine normalmente já cria as regras no Windows Firewall. Caso
+precisa criá-las manualmente:
+
+| Porta | Protocolo | Uso |
+| --- | --- | --- |
+| 47984 | TCP | HTTPS (pareamento / API) |
+| 47989 | TCP | HTTP (pareamento / API) |
+| 48010 | TCP | RTSP (sessão) |
+| 47998 | UDP | Vídeo |
+| 47999 | UDP | Áudio |
+| 48000 | UDP | Controle (input) |
+| 47990 | TCP | Web UI (opcional, só para configurar) |
+
+Como o PC e o Xbox estão em **redes diferentes**, o roteador/firewall **entre** as
+redes também precisa permitir esses fluxos de entrada para o IPv6 do PC. Diferente do
+IPv4, no IPv6 normalmente **não há NAT/port-forward**: o que se configura é uma
+exceção (pinhole) no firewall.
+
+### Teste rápido
+
+De outra máquina na rede do Xbox:
+
+```powershell
+Test-NetConnection -ComputerName 2001:db8::1234 -Port 47989
+Invoke-WebRequest "http://[2001:db8::1234]:47989/serverinfo"
+```
+
 ## Limitações
 
-- **Wake-on-LAN não funciona via IPv6** (broadcast é IPv4). Se o host estiver
+- **Wake-on-LAN não funciona via IPv6** (o broadcast é IPv4). Se o host estiver
   desligado e só acessível por IPv6, ligue-o manualmente.
 - **Descoberta automática (mDNS)** só procura hosts IPv4. Um host remoto em outra
   rede não seria descoberto de qualquer forma; adicione-o manualmente.
-- O host (Sunshine/GeForce Experience) também precisa estar **escutando em IPv6**.
-  No Sunshine, verifique `origin_web_ui_allowed`/binds e que a máquina tem um
-  endereço IPv6 global (não apenas link-local `fe80::`).
-
-## Aviso sobre "duas redes"
-
-Para o PC e o Xbox em redes diferentes, o endereço IPv6 precisa ser **global/roteável**
-entre eles. Endereços `fe80::` (link-local) ou ULA (`fd00::/8`) só funcionam dentro do
-mesmo enlace. Além disso as portas do host (47984, 47989, 48010, 47998-48010, etc.)
-precisam estar liberadas no firewall.
+- O host (Sunshine) precisa estar **escutando em IPv6** (`address_family = both`) e
+  ter um endereço IPv6 **global** (não apenas link-local `fe80::`).
