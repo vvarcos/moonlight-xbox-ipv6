@@ -32,17 +32,12 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Restore VCPKG packages
-      run: |
-        Invoke-WebRequest `
-          -Uri "https://github.com/TheElixZammuto/moonlight-xbox/releases/download/1.10.0/vcpkg_installed.zip" `
-          -OutFile .\vcpkg_installed.zip
-
-    - name: Extract VCPKG packages
-      run: Expand-Archive .\vcpkg_installed.zip -DestinationPath .\
-
-    - name: List VCPKG packages
-      run: dir .\vcpkg_installed
+    # NOTE: we intentionally do NOT restore the upstream "vcpkg_installed.zip"
+    # anymore. That archive (release 1.10.0) is stale and ships an old ffmpeg,
+    # while the app requires ffmpeg 8.1.2 (see Streaming/FFmpegDecoder.cpp).
+    # Instead, generate-thirdparty-projects.bat points VCPKG_INSTALLED_DIR at
+    # the repo-root vcpkg_installed, so the dependencies are built there at the
+    # versions pinned in vcpkg.json and picked up by moonlight-xbox-dx.vcxproj.
 
     - name: Install VCPKG packages
       run: .\vcpkg\bootstrap-vcpkg.bat
