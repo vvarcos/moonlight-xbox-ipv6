@@ -7,6 +7,7 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
@@ -20,6 +21,8 @@ env:
 jobs:
   build:
     runs-on: windows-2022
+    permissions:
+      contents: write   # needed to publish a release when a tag is pushed
     steps:
     - uses: actions/checkout@v4
       with:
@@ -95,6 +98,10 @@ jobs:
           -Password (ConvertTo-SecureString -String $hash -AsPlainText -Force)
         Get-FileHash -Path "cert.pfx"
 
+        # Export the public certificate so it can be trusted on the Xbox
+        Export-Certificate -Cert Cert:\LocalMachine\My\$($cert.Thumbprint) -FilePath cert.cer | Out-Null
+        Get-FileHash -Path "cert.cer"
+
         # # Add the certificate to the local machine store
         # $cert_guid = [guid]::NewGuid()
         # netsh http add sslcert `
@@ -152,3 +159,17 @@ jobs:
         name: moonlight-uwp
         path: |
           output
+
+    - name: Publish release
+      # Runs only when a tag like v1.0.0 is pushed. Attaches the built package
+      # to a GitHub Release so it can be downloaded without logging in.
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v2
+      with:
+        name: ${{ github.ref_name }}
+        generate_release_notes: true
+        fail_on_unmatched_files: false
+        files: |
+          output/**/*.msixbundle
+          output/**/*.appx
+          cert.cer
