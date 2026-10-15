@@ -254,16 +254,24 @@ std::vector<std::string> moonlight_xbox_dx::ApplicationState::Build_Unique_Addre
 {
 	std::vector<std::string> addresses;
 
+	// Wake-on-LAN relies on UDP broadcast, which is IPv4-only. Only collect
+	// IPv4 addresses here; IPv6 hosts can't be woken this way.
+	auto isIPv4 = [](const std::string& value) {
+		in_addr parsed;
+		return inet_pton(AF_INET, value.c_str(), &parsed) == 1;
+	};
+
 	if (host->ServerAddress)
 	{
-		addresses.push_back(Utils::PlatformStringToStdString(host->ServerAddress));
+		std::string serverAddress = Utils::PlatformStringToStdString(host->ServerAddress);
+		if (isIPv4(serverAddress)) addresses.push_back(serverAddress);
 	}
 
 	if (host->LastHostname)
 	{
 		auto hostnameSplit = Split_IP_Address(Utils::PlatformStringToStdString(host->LastHostname), ':');
 		std::string hostIp = hostnameSplit.first;
-		addresses.push_back(hostIp);
+		if (isIPv4(hostIp)) addresses.push_back(hostIp);
 	}
 
 	if (inet_addr(Utils::PlatformStringToStdString(host->ServerAddress).c_str()) != -1)
@@ -359,6 +367,34 @@ std::string moonlight_xbox_dx::ApplicationState::Get_Broadcast_IP(std::string ip
 
 std::pair<std::string, int> moonlight_xbox_dx::ApplicationState::Split_IP_Address(const std::string& address, char deliminator)
 {
+	// IPv6 literals contain colons, so they can't be split naively. A port is
+	// only present when the bracketed form is used: [addr]:port.
+	if (deliminator == ':') {
+		if (!address.empty() && address.front() == '[') {
+			auto closing = address.find(']');
+			if (closing != std::string::npos) {
+				std::string host = address.substr(1, closing - 1);
+				if (closing + 1 < address.size() && address[closing + 1] == ':') {
+					std::string portStr = address.substr(closing + 2);
+					try {
+						return { host, std::stoi(portStr) };
+					}
+					catch (const std::invalid_argument&) {
+						throw std::invalid_argument("Invalid port number format");
+					}
+					catch (const std::out_of_range&) {
+						throw std::out_of_range("Port number out of range");
+					}
+				}
+				return { host, 0 };
+			}
+		}
+		// A bare IPv6 literal (two or more colons) has no port component.
+		if (std::count(address.begin(), address.end(), ':') > 1) {
+			return { address, 0 };
+		}
+	}
+
 	std::stringstream ss(address);
 	std::string ip_address;
 	std::string port_str;

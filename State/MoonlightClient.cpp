@@ -176,6 +176,7 @@ MoonlightClient *connectedInstance;
 MoonlightClient::MoonlightClient()
     : m_isHDR(false),
       m_isRGBFull(false) {
+	memset(&serverData, 0, sizeof(serverData));
 	HdmiDisplayInformation ^ hdmi = HdmiDisplayInformation::GetForCurrentView();
 	if (hdmi) {
 		HdmiDisplayMode ^ current = hdmi->GetCurrentDisplayMode();
@@ -193,6 +194,10 @@ MoonlightClient::~MoonlightClient() {
 	if (hostname != NULL) {
 		free(hostname);
 		hostname = NULL;
+	}
+	if (serverData.urlHost != NULL) {
+		free(serverData.urlHost);
+		serverData.urlHost = NULL;
 	}
 }
 
@@ -429,12 +434,41 @@ void connection_trigger_rumble(unsigned short controllerNumber, unsigned short l
 int MoonlightClient::Connect(const char *hostname) {
 	this->hostname = (char *)malloc(2048 * sizeof(char));
 	strcpy_s(this->hostname, 2048, hostname);
-	if (strchr(this->hostname, ':') != 0) {
-		char portStr[2048];
-		strcpy_s(portStr, 2048, strchr(this->hostname, ':') + 1);
-		port = atoi(portStr);
-		*strchr(this->hostname, ':') = '\0';
+
+	// Tear off an optional port. IPv6 literals contain colons themselves, so
+	// when a port is present they must be written using brackets (RFC 3986):
+	//   [2001:db8::1]:47989   -> host "2001:db8::1", port 47989
+	//   [2001:db8::1]         -> host "2001:db8::1", default port
+	//   2001:db8::1           -> host "2001:db8::1", default port
+	//   192.168.1.10:47989    -> host "192.168.1.10", port 47989
+	//   myhost:47989          -> host "myhost", port 47989
+	port = 0;
+	char* hostPart = this->hostname;
+	char* portPart = nullptr;
+
+	if (this->hostname[0] == '[') {
+		char* closingBracket = strchr(this->hostname, ']');
+		if (closingBracket != nullptr) {
+			*closingBracket = '\0';
+			hostPart = this->hostname + 1; // skip the opening '['
+			if (closingBracket[1] == ':') portPart = closingBracket + 2;
+		}
 	}
+	else {
+		char* firstColon = strchr(this->hostname, ':');
+		// A single colon is a "host:port" separator. Multiple colons mean we
+		// have a bare IPv6 literal with no port.
+		if (firstColon != nullptr && strchr(firstColon + 1, ':') == nullptr) {
+			*firstColon = '\0';
+			portPart = firstColon + 1;
+		}
+	}
+
+	if (portPart != nullptr && *portPart != '\0') port = atoi(portPart);
+
+	// gs_init() keeps the pointer we hand it, so shift the bare host (without
+	// brackets and without the port) to the start of the buffer.
+	if (hostPart != this->hostname) memmove(this->hostname, hostPart, strlen(hostPart) + 1);
 
 	Platform::String ^ folderString = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
 	folderString = folderString->Concat(folderString, "\\");

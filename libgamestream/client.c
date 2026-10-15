@@ -105,6 +105,42 @@ static const char *get_device_name() {
   return "Xbox";
 }
 
+// Formats a host address for use inside a URL. IPv6 literals must be enclosed
+// in square brackets per RFC 3986 (e.g. "2001:db8::1" -> "[2001:db8::1]").
+// Returns a newly allocated string that the caller must free(), or NULL on
+// allocation failure.
+static char* format_url_host(const char* address) {
+  if (address == NULL)
+    return NULL;
+
+  size_t len = strlen(address);
+  bool alreadyBracketed = (len >= 2 && address[0] == '[' && address[len - 1] == ']');
+  bool isIpv6Literal = (!alreadyBracketed && memchr(address, ':', len) != NULL);
+
+  if (!alreadyBracketed && !isIpv6Literal) {
+    char* copy = malloc(len + 1);
+    if (copy != NULL)
+      memcpy(copy, address, len + 1);
+    return copy;
+  }
+
+  if (alreadyBracketed) {
+    char* copy = malloc(len + 1);
+    if (copy != NULL)
+      memcpy(copy, address, len + 1);
+    return copy;
+  }
+
+  char* result = malloc(len + 3);
+  if (result == NULL)
+    return NULL;
+  result[0] = '[';
+  memcpy(result + 1, address, len);
+  result[len + 1] = ']';
+  result[len + 2] = '\0';
+  return result;
+}
+
 static int mkdirtree(const char* directory) {
   char buffer[PATH_MAX];
   char* p = buffer;
@@ -246,7 +282,7 @@ static int load_serverinfo(PSERVER_DATA server, bool https) {
   uuid_unparse(&uuid, uuid_str);
 
   snprintf(url, sizeof(url), "%s://%s:%d/serverinfo?uniqueid=%s&uuid=%s",
-    https ? "https" : "http", server->serverInfo.address, https ? server->httpsPort : server->httpPort, unique_id, uuid_str);
+    https ? "https" : "http", server->urlHost, https ? server->httpsPort : server->httpPort, unique_id, uuid_str);
 
   PHTTP_DATA data = http_create_data();
   CURL* curl = get_curl_handle();
@@ -491,7 +527,7 @@ int gs_unpair(PSERVER_DATA server) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "http://%s:%u/unpair?uniqueid=%s&uuid=%s", server->serverInfo.address, server->httpPort, unique_id, uuid_str);
+  snprintf(url, sizeof(url), "http://%s:%u/unpair?uniqueid=%s&uuid=%s", server->urlHost, server->httpPort, unique_id, uuid_str);
   CURL* curl = get_curl_handle();
   ret = http_request(curl, url, data);
 
@@ -520,7 +556,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
   snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=%s&updateState=1&phrase=getservercert&salt=%s&clientcert=%s",
-    server->serverInfo.address,
+    server->urlHost,
     server->httpPort,
     unique_id,
     uuid_str,
@@ -583,7 +619,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&clientchallenge=%s", server->serverInfo.address, server->httpPort, unique_id, uuid_str, challenge_hex);
+  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&clientchallenge=%s", server->urlHost, server->httpPort, unique_id, uuid_str, challenge_hex);
   if ((ret = http_request(curl, url, data)) != GS_OK)
     goto cleanup;
 
@@ -645,7 +681,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&serverchallengeresp=%s", server->serverInfo.address, server->httpPort, unique_id, uuid_str, challenge_response_hex);
+  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&serverchallengeresp=%s", server->urlHost, server->httpPort, unique_id, uuid_str, challenge_response_hex);
   if ((ret = http_request(curl, url, data)) != GS_OK)
     goto cleanup;
 
@@ -703,7 +739,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&clientpairingsecret=%s", server->serverInfo.address, server->httpPort, unique_id, uuid_str, client_pairing_secret_hex);
+  snprintf(url, sizeof(url), "http://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&clientpairingsecret=%s", server->urlHost, server->httpPort, unique_id, uuid_str, client_pairing_secret_hex);
   if ((ret = http_request(curl, url, data)) != GS_OK)
     goto cleanup;
 
@@ -722,7 +758,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "https://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&phrase=pairchallenge", server->serverInfo.address, server->httpsPort, unique_id, uuid_str);
+  snprintf(url, sizeof(url), "https://%s:%u/pair?uniqueid=%s&uuid=%s&devicename=roth&updateState=1&phrase=pairchallenge", server->urlHost, server->httpsPort, unique_id, uuid_str);
   if ((ret = http_request(curl, url, data)) != GS_OK)
     goto cleanup;
 
@@ -771,7 +807,7 @@ int gs_applist(PSERVER_DATA server, PAPP_LIST *list) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "https://%s:%u/applist?uniqueid=%s&uuid=%s", server->serverInfo.address, server->httpsPort, unique_id, uuid_str);
+  snprintf(url, sizeof(url), "https://%s:%u/applist?uniqueid=%s&uuid=%s", server->urlHost, server->httpsPort, unique_id, uuid_str);
   CURL* curl = get_curl_handle();
   if (http_request(curl,url, data) != GS_OK)
     ret = GS_IO_ERROR;
@@ -829,7 +865,7 @@ int gs_start_app(PSERVER_DATA server, STREAM_CONFIGURATION *config, int appId, b
   // on GFE 3.20.3.
   int fps = (server->isNvidiaSoftware && config->fps > 60) ? 0 : config->fps;
   snprintf(url, sizeof(url), "https://%s:%u/%s?uniqueid=%s&uuid=%s&appid=%d&mode=%dx%dx%d&additionalStates=1&sops=%d&rikey=%s&rikeyid=%d&localAudioPlayMode=%d&surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d%s%s",
-      server->serverInfo.address, server->httpsPort, server->currentGame ? "resume" : "launch", unique_id, uuid_str, appId, config->width, config->height, fps, sops, rikey_hex, rikeyid, localaudio, surround_info, gamepad_mask, gamepad_mask,
+      server->urlHost, server->httpsPort, server->currentGame ? "resume" : "launch", unique_id, uuid_str, appId, config->width, config->height, fps, sops, rikey_hex, rikeyid, localaudio, surround_info, gamepad_mask, gamepad_mask,
       (config->supportedVideoFormats & VIDEO_FORMAT_MASK_10BIT) ? "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" : "", LiGetLaunchUrlQueryParameters());
   CURL* curl = get_curl_handle();
   if ((ret = http_request(curl, url, data)) == GS_OK)
@@ -877,7 +913,7 @@ int gs_quit_app(PSERVER_DATA server) {
 
   uuid_generate_random(&uuid);
   uuid_unparse(&uuid, uuid_str);
-  snprintf(url, sizeof(url), "https://%s:%u/cancel?uniqueid=%s&uuid=%s", server->serverInfo.address, server->httpsPort, unique_id, uuid_str);
+  snprintf(url, sizeof(url), "https://%s:%u/cancel?uniqueid=%s&uuid=%s", server->urlHost, server->httpsPort, unique_id, uuid_str);
   CURL* curl = get_curl_handle();
   if ((ret = http_request(curl, url, data)) != GS_OK)
     goto cleanup;
@@ -919,6 +955,8 @@ int gs_init(PSERVER_DATA server, char *address, unsigned short httpPort, const c
 
   LiInitializeServerInformation(&server->serverInfo);
   server->serverInfo.address = address;
+  free(server->urlHost);
+  server->urlHost = format_url_host(address);
   server->unsupported = unsupported;
   server->httpPort = httpPort ? httpPort : 47989;
   server->httpsPort = server->httpPort - 5;
@@ -980,7 +1018,7 @@ int gs_appasset(PSERVER_DATA server, const char *keyDirectory, int appId) {
   uuid_unparse(&uuid, uuid_str);
 
   length = snprintf(url, sizeof(url), "https://%s:%u/appasset?appid=%d&AssetType=2&AssetIdx=0",
-                    server->serverInfo.address, server->httpsPort, appId);
+                    server->urlHost, server->httpsPort, appId);
   if (length < 0 || (size_t)length >= sizeof(url)) {
     return GS_INVALID;
   }

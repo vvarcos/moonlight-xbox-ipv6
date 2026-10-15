@@ -43,6 +43,10 @@ typedef struct _SERVER_DATA {
   char* serverName;
   char* uniqueId;
   char* macAddress;
+  // Host address formatted for use inside URLs. IPv6 literals are wrapped in
+  // square brackets per RFC 3986 (e.g. "2001:db8::1" -> "[2001:db8::1]").
+  // NULL until gs_init() has been called. Owned by this struct.
+  char* urlHost;
 } SERVER_DATA, *PSERVER_DATA;
 
 int gs_init(PSERVER_DATA server, char* address, unsigned short httpPort, const char *keyDirectory, int logLevel, bool unsupported);
