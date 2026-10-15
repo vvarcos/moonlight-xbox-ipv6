@@ -4,6 +4,12 @@
 * text=auto
 
 ###############################################################################
+# Patch files must keep LF line endings. They are applied by vcpkg with
+# `git apply`, which rejects CRLF patches with "corrupt patch" errors.
+###############################################################################
+*.patch text eol=lf
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by
