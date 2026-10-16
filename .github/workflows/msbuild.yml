@@ -55,7 +55,11 @@ jobs:
     # versions pinned in vcpkg.json and picked up by moonlight-xbox-dx.vcxproj.
 
     - name: Install VCPKG packages
-      run: .\vcpkg\bootstrap-vcpkg.bat
+      run: |
+        # vcpkg refuses to start unless the binary cache directory exists,
+        # and actions/cache does not create it on a cache miss
+        New-Item -ItemType Directory -Force -Path "${{ env.VCPKG_DEFAULT_BINARY_CACHE }}" | Out-Null
+        .\vcpkg\bootstrap-vcpkg.bat
 
     - name: Build third party tools
       run: .\generate-thirdparty-projects.bat
