@@ -87,6 +87,10 @@ jobs:
         $github_output = "password=$hash"
         $github_output | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+        # export the thumbprint so MSBuild signs with THIS certificate instead of
+        # the hardcoded one in moonlight-xbox-dx.vcxproj (which belongs to upstream)
+        "thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
         Export-PfxCertificate `
           -Cert Cert:\LocalMachine\My\$($cert.Thumbprint) `
           -FilePath cert.pfx `
@@ -132,6 +136,16 @@ jobs:
           $certPasswordArg = ""
         }
 
+        # the self-signed certificate of a fork has its own thumbprint, which does
+        # not match the upstream one hardcoded in moonlight-xbox-dx.vcxproj
+        $certThumbprint = "${{ steps.cert.outputs.thumbprint }}"
+        if ($certThumbprint -ne "") {
+          $certThumbprintArg = "/p:PackageCertificateThumbprint=$certThumbprint"
+        }
+        else {
+          $certThumbprintArg = ""
+        }
+
         msbuild /m `
           /p:Configuration=${{env.BUILD_CONFIGURATION}} `
           /p:AppxBundle=Always `
@@ -139,6 +153,7 @@ jobs:
           /p:PackageCertificateKeyFile=cert.pfx `
           /p:UapAppxPackageBuildMode=SideLoadOnly `
           $certPasswordArg `
+          $certThumbprintArg `
           ${{env.SOLUTION_FILE_PATH}}
 
     - name: Clean Certificate
