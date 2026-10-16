@@ -35,7 +35,18 @@ camada do app e no `libgamestream`:
 Na tela inicial, toque em `+` (Add new Host) e informe o endereço do PC host:
 
 - **IPv4:** `192.168.1.10` (porta padrão) ou `192.168.1.10:47989`
-- **IPv6:** `2001:db8::1234` ou, se precisar indicar a porta, `[2001:db8::1234]:47989`
+- **IPv6:** `2001:db8::1234` (recomendado) ou, se precisar indicar a porta,
+  `[2001:db8::1234]:47989`
+
+Detalhes do parsing:
+
+- Sem porta, o endereço IPv6 pode ser escrito **com ou sem** colchetes.
+- **Com** porta, os colchetes são **obrigatórios** (sem eles o app entende que tudo é
+  o host). Nunca use `2001:db8::1234:47989`.
+- A porta informada é a **HTTP** (padrão `47989`); a HTTPS é derivada dela
+  (`porta − 5` → `47984`).
+- Endereço **link-local** (`fe80::…%12`) não funciona (o `%` do escopo quebra na
+  URL). Use um endereço global.
 
 Ao parear/abrir a lista de apps, o cliente monta as URLs com colchetes
 automaticamente.
@@ -44,17 +55,19 @@ automaticamente.
 
 ### Opção A — GitHub Actions (não precisa instalar nada)
 
-1. Suba este branch (`ipv6-support`) para o **seu fork** no GitHub.
-2. Em `Actions`, rode o workflow `MSBuild` (ou dê push para `master` do fork).
-3. Baixe o artefato `moonlight-uwp` (contém o `.msixbundle`).
-4. Baixe o `cert.cer` (certificado público) na página de **Release** do fork.
-5. No Xbox (modo dev), pelo Device Portal, confie no `cert.cer` e instale o
-   `.msixbundle`.
+1. Em `Actions`, rode o workflow `MSBuild` (ou dê push para `master` do fork).
+2. Baixe o artefato `moonlight-uwp` (contém o `.msixbundle`), ou use a página de
+   **Release** (download sem precisar de login).
+3. No Xbox (modo dev), instale as dependências e depois o app — veja a seção
+   **Instalação** do [README](README.md).
 
-> O workflow foi ajustado para gerar um certificado de teste automaticamente quando
-> ele roda fora do repositório original, permitindo instalar o pacote do seu fork.
-> Ao empurrar uma tag `v*` ele também publica um **Release** com o `.msixbundle` e o
-> `cert.cer` anexados (download sem precisar de login).
+> O workflow gera um certificado de teste automaticamente quando roda fora do
+> repositório original, o que permite assinar o pacote. Ao empurrar uma tag `v*` ele
+> também publica um **Release** com o `.msixbundle` e as dependências (Microsoft.UI.Xaml
+> e Microsoft.VCLibs). O **certificado não é publicado**: em modo desenvolvedor o app
+> é registrado a partir dos arquivos soltos (*loose*), caminho que não verifica
+> assinatura; se o pacote assinado for necessário, o certificado pode ser extraído da
+> assinatura do próprio `.msixbundle`.
 
 ### Opção B — Build local
 

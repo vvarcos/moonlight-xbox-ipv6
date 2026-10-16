@@ -1,94 +1,154 @@
-﻿# moonlight-xbox 
+﻿# Moonlight para Xbox — fork com suporte a IPv6
 
-[![Download](https://get.microsoft.com/images/en-us%20dark.svg)](https://apps.microsoft.com/store/detail/9MW1BS08ZBTH?launch=true&mode=full)
+Cliente [Moonlight](https://moonlight-stream.org/) para **Xbox One / Xbox Series X|S**,
+para jogar em streaming a partir do PC (GeForce Experience ou
+[Sunshine](https://github.com/LizardByte/sunshine) / Apollo).
 
-A port of [Moonlight Stream](https://moonlight-stream.org/) for playing games using GeForce Experience or [Sunshine](https://github.com/LizardByte/sunshine) for the Xbox One and Xbox Series X|S family of consoles
+Este repositório é um **fork** de
+[TheElixZammuto/moonlight-xbox](https://github.com/TheElixZammuto/moonlight-xbox).
 
-**This application is still in early stages of development. Expect things to not work or working badly**
+---
 
-## Installation and Usage
+## Sobre este fork
 
-### For Retail Mode (you probably want to use this)
+> **O motivo deste fork é um só: permitir conectar a um host por IPv6.**
 
-1. Open Microsoft Edge and click the "Get it from Microsoft" Button above 
-2. Downlad Moonlight UWP from the Microsoft Store
-3. Open Moonlight on Xbox and, if not already, your host app
-4. Press the "+" button, Insert your PC IP Address and press "Connect"
-5. Pair if neeeded
-6. Choose from the list below the application you want to run
-7. ???
-8. Profit!
+O app original só entende endereços **IPv4**. Isso é um problema quando o PC host
+**não está na mesma rede** que o Xbox: fora da rede local, a única forma de alcançar
+o PC costuma ser por um **endereço IPv6 global** (no IPv4 seria preciso NAT/port
+forward no roteador, enquanto no IPv6 basta liberar o firewall).
 
-### For Dev Mode
+Com este fork o campo de endereço do app aceita IPv6, então o Xbox consegue
+**parear, listar os aplicativos e fazer streaming** de um host em outra rede.
 
-**Looking for the Standard Dev Mode Builds? Can be found here:** [Link](https://github.com/TheElixZammuto/moonlight-xbox/releases)
+Fora o IPv6, o app é o mesmo do projeto original — e o app publicado na
+**Microsoft Store é do projeto original, sem suporte a IPv6**.
 
-**Looking for the Bleeding Edge Builds? Can be found here:** [Link](https://github.com/TheElixZammuto/moonlight-xbox/actions)
+## Como conectar por IPv6
 
-1. Enable the Dev Mode on your Xbox https://docs.microsoft.com/en-us/windows/uwp/xbox-apps/devkit-activation
-2. Using the Device Portal, install the Application (moonlight-xbox-dx.msixbundle) and, in the following step, add the required dependencies (Microsoft.UI.Xaml.2.7.appx and Microsoft.VCLibs.x64.14.00.appx)
-3. Open Moonlight on Xbox and, if not already, your host app
-4. Your PC should already be on the list. If not, press the "+" button, Insert your PC IP Address and press "Connect"
-5. Pair if neeeded
-6. Choose from the list below the application you want to run
-7. ???
-8. Profit!
+### 1) No PC (host)
 
-## What does work
-- Connection and Pairing
-- Application List fetching
-- Video Streaming (configurable on a host-basis in the settings)
-- Gamepad Input (with Rumble, battery reporting, and a mouse mode to move the pointer using the gamepad)
-- Keyboard (both on-screen and using an Hardware one)
-- Graceful Disconnection
-- Host configuration (for resolution and bitrate) and saved host history
-- Audio
-- HDR
+1. Use **[Sunshine](https://github.com/LizardByte/sunshine)** (ou o fork Apollo).
+   O GeForce Experience do NVIDIA **não escuta em IPv6** e está descontinuado.
+2. Habilite IPv6 no Sunshine, em `sunshine.conf`:
 
-## What does NOT work
+   ```ini
+   # O padrão é "ipv4": sem isto o Sunshine não abre nenhum socket IPv6.
+   address_family = both
+   ```
 
-- Hardware Mouse (UWP limitations sadly)
-- Everything else not listed above
+3. Confirme que o PC tem um **endereço IPv6 global** (rode `ipconfig` e procure algo
+   como `2804:...`). Endereço **link-local** (`fe80::`) ou **ULA** (`fd00::`) **não
+   serve** para redes diferentes.
+4. Libere no firewall as portas necessárias (47984, 47989, 48010/TCP e
+   47998, 47999, 48000/UDP) e, se as redes forem diferentes, libere também no
+   roteador/firewall entre elas.
 
-## Building
+Detalhes completos de configuração do host: **[IPV6.md](IPV6.md)**.
 
-### Requirements
+### 2) No Xbox
 
-- Windows 10
-- Visual Studio 2022
-    - WinUI Application Development Workload
-        - Windows 10 SDK (10.0.19041.0) - This is marked as out of support as of VS 2022 version 17.10, but is still necessary for CMake
-        - Universal Windows Platform Tools
-        - C++ (v141, v142, v143) Universal Windows Platform Tools
+1. Abra o Moonlight e toque em **`+`** (*Add new Host*). O diálogo tem **uma única
+   caixa de texto** — não existe campo separado de porta.
+2. Digite o endereço IPv6:
 
-### Steps to build
+   | O que digitar | Resultado |
+   | --- | --- |
+   | `2001:db8:1234:5678::1` | host IPv6, porta padrão (47989) — **recomendado** |
+   | `[2001:db8:1234:5678::1]` | igual (colchetes opcionais quando não há porta) |
+   | `[2001:db8:1234:5678::1]:47989` | host + porta explícita — aqui os **colchetes são obrigatórios** |
 
-**You have two options:**
+   - **Não** digite `2001:db8::1:47989` sem colchetes: o app vê vários `:` e entende
+     que tudo é o host.
+   - A porta informada é a **HTTP** (padrão `47989`); a HTTPS é derivada dela
+     (`porta − 5` → `47984`). Se o host está no padrão, **não coloque porta**.
+   - Endereço **link-local** (`fe80::…%12`) não funciona: o `%` do escopo quebra na
+     URL. Use o endereço global.
+   - Dica: digitar IPv6 no teclado virtual do Xbox com o controle é bem ruim —
+     vale plugar um **teclado USB**.
 
-1. Clone this repository (`moonlight-xbox`) with submodules enabled!
-1. Install [VCPKG](https://vcpkg.io/en/index.html) and all dependencies:
-    1. Run `git submodule update --init --recursive`
-    1. Run `vcpkg\bootstrap-vcpkg.bat`
-    1. Install dependencies: `.\vcpkg\vcpkg.exe install --vcpkg-root vcpkg --triplet x64-uwp`
-1. Run x64 Visual Studio Prompt (Tools → Command Line → Developer Command Prompt)
-    1. Run `generate-thirdparty-projects.bat` to generate `moonlight-common-c` VS project
-    1. Go to `libgamestream` and run `build-uwp.bat` to generate `libgamestream` VS project
-    2. Open `moonlight-xbox-dx.vcxproj` in Visual Studio 2022
-    3. In the solution explorer, right click and build each of these projects, in the following order:
-        - enet
-        - moonlight-common-c
-        - gamestream
-4. In the solution explorer, expand `moonlight-xbox-dx (Universal Windows)`, then double click `Package.appxmanifest`
-5. Under the `Packaging` tab, next to `Publisher`, click the `Choose Certificate` button
-    -If you already have a certificate, select it and skip to the final step
-6. In the `Choose a Certificate` window that appears, click the `Create...` button
-7. Fill out the create prompt which appears, password is unnecessary if only building for personal use and/or debugging purposes.
-8. After all the actions above, you can now build the entire solution.
-1. After all the actions above, you finally can open and build solution.
+3. Toque em **Ok** e **pareie** quando solicitado (o PIN aparece no PC).
+4. Escolha o aplicativo na lista e jogue.
 
-**Or**
+Se o endereço não for alcançável, o próprio diálogo mostra
+`Failed to Connect to <endereço>`.
 
-1. Clone this repository
-1. Run `./setup-dev.ps1`
-1. Have fun!
-   
+## Instalação (modo desenvolvedor)
+
+O app não é distribuído na Store com IPv6, então ele é instalado pelo **modo
+desenvolvedor** do Xbox.
+
+1. Ative o **Dev Mode** no console:
+   <https://learn.microsoft.com/windows/uwp/xbox-apps/devkit-activation>
+2. Baixe os arquivos na página de **[Releases](../../releases)**:
+
+   | Arquivo | Para que serve |
+   | --- | --- |
+   | `moonlight-xbox-dx_1.18.3.0_x64.msixbundle` | o aplicativo |
+   | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
+   | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
+
+3. Abra o **Device Portal** (`https://<IP-do-Xbox>:11443`) e instale **primeiro as
+   duas dependências**. Elas são assinadas pela Microsoft e instalam como pacote
+   normal, sem precisar confiar em nenhum certificado extra.
+4. Instale o aplicativo. Duas opções:
+   - **Loose / register (modo dev):** extraia o
+     `moonlight-xbox-dx_1.18.3.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
+     arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
+     Nesse caminho **não há verificação de assinatura** — não precisa de certificado.
+   - **Pacote assinado:** instale o `.msixbundle` diretamente, caso o certificado
+     que assinou o pacote seja confiável no console.
+
+   > O certificado **não** é publicado nas Releases. Se precisar dele, é possível
+   > extraí-lo da assinatura do próprio pacote (no PC: botão direito no
+   > `.msixbundle` → **Propriedades** → **Assinaturas Digitais** → selecionar a
+   > assinatura → **Detalhes** → **Exibir Certificado** → **Detalhes** →
+   > **Copiar para Arquivo…**).
+
+## O que funciona
+
+- Conexão e pareamento — **inclusive por IPv6**
+- Lista de aplicativos do host
+- Streaming de vídeo (resolução, bitrate e fps configuráveis por host)
+- Áudio e **HDR**
+- Controle (com rumble e modo mouse pelo gamepad)
+- Teclado (virtual e USB)
+- Desconexão limpa
+- Histórico de hosts salvos
+
+## O que não funciona
+
+- **Wake-on-LAN por IPv6** — o pacote mágico usa broadcast, que é IPv4. Se o host só
+  responde por IPv6, ligue-o manualmente.
+- **Descoberta automática por IPv6** — o mDNS do app só procura hosts IPv4. Hosts em
+  outra rede precisam ser adicionados **manualmente** (o que já seria o caso).
+- **Mouse de hardware** (limitação do UWP)
+- Qualquer outra coisa não listada acima
+
+## Compilando
+
+O build é feito pelo **GitHub Actions** (`.github/workflows/msbuild.yml`): qualquer
+push gera um artifact `moonlight-uwp`, e uma tag `v*` publica um **Release**.
+
+Para compilar localmente são necessários Windows 10/11, **Visual Studio 2022** com o
+workload **Desenvolvimento para Plataforma Universal do Windows (UWP)** e o
+**Windows 10 SDK (10.0.19041.0)**, além do vcpkg. Depois:
+
+```powershell
+git submodule update --init --recursive
+./setup-dev.ps1
+```
+
+Abra `moonlight-xbox-dx.sln` no Visual Studio e compile a solução (o script já gera
+os projetos de terceiros, baixa as dependências do vcpkg e cria o certificado).
+
+## Documentação técnica
+
+- **[IPV6.md](IPV6.md)** — o que mudou no código para suportar IPv6, como configurar o
+  host (Sunshine/Apollo), firewall, testes e limitações.
+
+## Créditos e licença
+
+- Projeto original: [TheElixZammuto/moonlight-xbox](https://github.com/TheElixZammuto/moonlight-xbox)
+- [Moonlight](https://moonlight-stream.org/) e [moonlight-common-c](https://github.com/moonlight-stream/moonlight-common-c)
+- Distribuído sob a **GPLv3** ([LICENSE](LICENSE)), a mesma licença do projeto original.
