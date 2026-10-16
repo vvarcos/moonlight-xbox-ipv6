@@ -1,4 +1,4 @@
-﻿# Moonlight para Xbox — fork com suporte a IPv6
+# Moonlight para Xbox — fork com suporte a IPv6
 
 Cliente [Moonlight](https://moonlight-stream.org/) para **Xbox One / Xbox Series X|S**,
 para jogar em streaming a partir do PC (GeForce Experience ou
