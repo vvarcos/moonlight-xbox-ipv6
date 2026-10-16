@@ -17,6 +17,9 @@ concurrency:
 env:
   SOLUTION_FILE_PATH: .  # Path to the solution file relative to the root of the project.
   BUILD_CONFIGURATION: Release  # Configuration type to build.
+  # vcpkg writes every built package here; actions/cache persists it between
+  # runs, so ffmpeg/openssl/curl are not recompiled on every build.
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-bincache
 
 jobs:
   build:
@@ -31,6 +34,18 @@ jobs:
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
+
+    # Restore the vcpkg binary cache. The key is derived from vcpkg.json (pinned
+    # dependency versions) and the overlay ports (ffmpeg patches), so a change
+    # there correctly invalidates it. vcpkg itself is content addressed, so even
+    # a stale cache is harmless: it just misses and rebuilds what changed.
+    - name: Restore vcpkg binary cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+        key: vcpkg-bincache-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-overlays/**') }}
+        restore-keys: |
+          vcpkg-bincache-${{ runner.os }}-
 
     # NOTE: we intentionally do NOT restore the upstream "vcpkg_installed.zip"
     # anymore. That archive (release 1.10.0) is stale and ships an old ffmpeg,
