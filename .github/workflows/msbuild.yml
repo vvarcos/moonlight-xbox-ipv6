@@ -192,6 +192,8 @@ jobs:
     - name: Publish release
       # Runs only when a tag like v1.0.0 is pushed. Attaches the built package
       # to a GitHub Release so it can be downloaded without logging in.
+      # NOTE: the signing certificate (cert.cer) is intentionally NOT published;
+      # it can be extracted from the .msixbundle (AppxSignature.p7x) if needed.
       if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v2
       with:
@@ -201,4 +203,3 @@ jobs:
         files: |
           output/**/*.msixbundle
           output/**/*.appx
-          cert.cer
