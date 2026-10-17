@@ -976,6 +976,23 @@ void moonlight_xbox_dxMain::SendWinAltB() {
 	});
 }
 
+void moonlight_xbox_dxMain::SendKeyCombo(std::vector<unsigned short> keys) {
+	if (keys.empty()) {
+		return;
+	}
+
+	concurrency::create_async([this, keys]() {
+		// Pressiona todas as teclas na ordem, segura um instante e solta na ordem inversa
+		for (auto key : keys) {
+			moonlightClient->KeyDown(key, 0);
+		}
+		Sleep(120);
+		for (auto it = keys.rbegin(); it != keys.rend(); ++it) {
+			moonlightClient->KeyUp(*it, 0);
+		}
+	});
+}
+
 bool moonlight_xbox_dxMain::ToggleLogs() {
 	bool visible = m_LogRenderer->GetVisible();
 

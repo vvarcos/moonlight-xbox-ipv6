@@ -6,6 +6,7 @@
 #include "Streaming\LogRenderer.h"
 #include "Streaming\StatsRenderer.h"
 #include "Pages\StreamPage.xaml.h"
+#include <vector>
 
 // Xbox supports 8 controllers, this ought to be enough for anyone.
 #define MAX_GAMEPADS 8
@@ -36,6 +37,8 @@ namespace moonlight_xbox_dx
 		void ExitStreamPage();
 		void SendGuideButton(int duration);
 		void SendWinAltB();
+		// Envia uma combinacao de teclas ao host: pressiona todas na ordem, solta na ordem inversa
+		void SendKeyCombo(std::vector<unsigned short> keys);
 		bool ToggleLogs();
 		bool ToggleStats();
 

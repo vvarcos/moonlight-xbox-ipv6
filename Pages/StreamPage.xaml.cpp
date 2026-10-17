@@ -344,6 +344,46 @@ void StreamPage::toggleHDR_WinAltB_Click(Platform::Object^ sender, Windows::UI::
 	this->m_main->SendWinAltB();
 }
 
+void StreamPage::winCloseApp_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::Menu, (unsigned short)Windows::System::VirtualKey::F4 });
+}
+
+void StreamPage::winSwitchApp_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::Menu, (unsigned short)Windows::System::VirtualKey::Tab });
+}
+
+void StreamPage::winStartMenu_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::LeftWindows });
+}
+
+void StreamPage::winShowDesktop_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::LeftWindows, (unsigned short)Windows::System::VirtualKey::D });
+}
+
+void StreamPage::winMoveLeft_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::LeftWindows, (unsigned short)Windows::System::VirtualKey::Shift, (unsigned short)Windows::System::VirtualKey::Left });
+}
+
+void StreamPage::winMoveRight_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::LeftWindows, (unsigned short)Windows::System::VirtualKey::Shift, (unsigned short)Windows::System::VirtualKey::Right });
+}
+
+void StreamPage::winTaskManager_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::Control, (unsigned short)Windows::System::VirtualKey::Shift, (unsigned short)Windows::System::VirtualKey::Escape });
+}
+
+void StreamPage::winEscape_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
+{
+	this->m_main->SendKeyCombo({ (unsigned short)Windows::System::VirtualKey::Escape });
+}
+
 void StreamPage::resetDecoder_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e)
 {
 	// start with a fresh IDR

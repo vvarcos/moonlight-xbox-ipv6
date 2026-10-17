@@ -166,6 +166,14 @@ namespace moonlight_xbox_dx
 		void guideButtonShort_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void guideButtonLong_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void toggleHDR_WinAltB_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winCloseApp_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winSwitchApp_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winStartMenu_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winShowDesktop_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winMoveLeft_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winMoveRight_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winTaskManager_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+		void winEscape_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void resetDecoder_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void toggleFramePacing_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 		void toggleCapture_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);

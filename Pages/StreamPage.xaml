@@ -63,6 +63,48 @@
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyoutSubItem>
+                        <MenuFlyoutSubItem x:Name="windowsCommandsMenu" Text="Windows commands">
+                            <MenuFlyoutItem x:Name="winCloseApp" Text="Close app (Alt+F4)" Click="winCloseApp_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE8BB;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winSwitchApp" Text="Switch app (Alt+Tab)" Click="winSwitchApp_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE7C4;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winStartMenu" Text="Start menu (Win)" Click="winStartMenu_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE782;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winShowDesktop" Text="Show desktop (Win+D)" Click="winShowDesktop_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE71D;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winMoveLeft" Text="Move window left (Win+Shift+Left)" Click="winMoveLeft_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE76B;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winMoveRight" Text="Move window right (Win+Shift+Right)" Click="winMoveRight_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE76C;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winTaskManager" Text="Task Manager (Ctrl+Shift+Esc)" Click="winTaskManager_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Setting" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="winEscape" Text="Send Escape" Click="winEscape_Click" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE711;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyoutSubItem>
                         <MenuFlyoutSeparator></MenuFlyoutSeparator>
                         <MenuFlyoutItem x:Name="toggleStatsButton" Text="{x:Bind ShowStats, Mode=OneWay, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Hide Stats|Show Stats'}" AllowFocusOnInteraction="false" FocusVisualSecondaryThickness="0.5" Click="toggleStatsButton_Click">
                             <MenuFlyoutItem.Icon>
