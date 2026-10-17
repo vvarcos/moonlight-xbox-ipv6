@@ -114,7 +114,7 @@ desenvolvedor** do Xbox.
 
    | Arquivo | Para que serve |
    | --- | --- |
-   | `moonlight-xbox-dx_1.18.3.0_x64.msixbundle` | o aplicativo |
+   | `moonlight-xbox-dx_1.19.0.0_x64.msixbundle` | o aplicativo |
    | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
    | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
 
@@ -123,7 +123,7 @@ desenvolvedor** do Xbox.
    normal, sem precisar confiar em nenhum certificado extra.
 4. Instale o aplicativo. Duas opções:
    - **Loose / register (modo dev)** — extraia o
-     `moonlight-xbox-dx_1.18.3.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
+     `moonlight-xbox-dx_1.19.0.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
      arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
      Neste caminho **não há verificação de assinatura** — não precisa de certificado.
    - **Pacote assinado** — instale o `.msixbundle` direto, caso o certificado que
@@ -133,6 +133,24 @@ desenvolvedor** do Xbox.
    > extrair da assinatura do próprio pacote: botão direito no `.msixbundle` →
    > **Propriedades** → **Assinaturas Digitais** → selecionar a assinatura →
    > **Detalhes** → **Exibir Certificado** → **Detalhes** → **Copiar para Arquivo…**
+
+## ✨ Novidades desta build (v1.19.0)
+
+- **Interface redesenhada** — fundo com gradiente escuro, cards de host com borda
+  arredondada e destaque de foco, e a lista de aplicativos com **tiles em cartão**
+  (arte ~25% menor, nome centralizado).
+- **Comandos do Windows no streaming** — segure **Select + Start** com o controle
+  para abrir o menu e acessar a seção *Windows commands*:
+
+  | Comando | Ação no PC host |
+  | --- | --- |
+  | Close app (Alt+F4) | Fecha o jogo/app |
+  | Switch app (Alt+Tab) | Alterna entre janelas |
+  | Start menu (Win) | Abre o Iniciar |
+  | Show desktop (Win+D) | Mostra a área de trabalho |
+  | Move window left/right (Win+Shift+←/→) | Move a janela entre monitores |
+  | Task Manager (Ctrl+Shift+Esc) | Gerenciador de tarefas |
+  | Send Escape | Envia Esc |
 
 ## ✅ O que funciona
 
