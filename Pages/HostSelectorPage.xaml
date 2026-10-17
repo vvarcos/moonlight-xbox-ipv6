@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Background="{StaticResource AppBackgroundBrush}"
     XYFocusKeyboardNavigation="Disabled"
     >
     <FlyoutBase.AttachedFlyout>
@@ -44,29 +44,50 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" VerticalAlignment="Center" Padding="0,0,0,8" >
+
+        <!-- ===================== Cabecalho ===================== -->
+        <Grid Grid.Row="0" Padding="28,24,28,4">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Padding="8">
-                <Image Source="ms-appx:///Assets/StoreLogo.scale-200.png" Width="48" Height="48"></Image>
-                <TextBlock VerticalAlignment="Center" Padding="8" FontSize="20">Moonlight</TextBlock>
+
+            <Border Grid.Column="0" Width="54" Height="54" VerticalAlignment="Center"
+                    Background="{StaticResource CardBackgroundBrush}"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="1" CornerRadius="16">
+                <Image Source="ms-appx:///Assets/StoreLogo.scale-200.png" Width="38" Height="38" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Padding="16,0,16,0">
+                <TextBlock Text="Moonlight" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock Text="Select a host to start streaming" Style="{StaticResource CaptionStyle}" />
             </StackPanel>
-            <StackPanel  Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="8" Orientation="Horizontal" Spacing="16">
-                <Button Click="NewHostButton_Click" TabIndex="2">
+
+            <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal" Spacing="12">
+                <Button Click="NewHostButton_Click" TabIndex="2" Style="{StaticResource IconButtonStyle}">
                     <Button.Content>
                         <SymbolIcon Symbol="Add" />
                     </Button.Content>
                 </Button>
-                <Button Name="SettingsButton" TabIndex="3" Click="SettingsButton_Click">
+                <Button Name="SettingsButton" TabIndex="3" Click="SettingsButton_Click" Style="{StaticResource IconButtonStyle}">
                     <Button.Content>
                         <SymbolIcon Symbol="Setting" />
                     </Button.Content>
                 </Button>
             </StackPanel>
         </Grid>
-        <GridView IsRightTapEnabled="True" RightTapped="HostsGrid_RightTapped" Grid.Row="1" x:Name="HostsGrid"  ItemsSource="{x:Bind State.SavedHosts}" IsItemClickEnabled="True" ItemClick="GridView_ItemClick" TabIndex="1" HorizontalAlignment="Center" VerticalAlignment="Center" SelectionMode="None">
+
+        <!-- ===================== Lista de hosts ===================== -->
+        <GridView IsRightTapEnabled="True" RightTapped="HostsGrid_RightTapped" Grid.Row="1" x:Name="HostsGrid"  ItemsSource="{x:Bind State.SavedHosts}" IsItemClickEnabled="True" ItemClick="GridView_ItemClick" TabIndex="1" HorizontalAlignment="Center" VerticalAlignment="Center" SelectionMode="None" Padding="24,12,24,28">
+            <GridView.ItemContainerStyle>
+                <Style TargetType="GridViewItem">
+                    <Setter Property="Margin" Value="10" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Background" Value="Transparent" />
+                </Style>
+            </GridView.ItemContainerStyle>
             <GridView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsWrapGrid Orientation="Horizontal"
@@ -76,21 +97,35 @@
             </GridView.ItemsPanel>
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="local:MoonlightHost" x:DefaultBindMode="OneWay">
-                    <StackPanel>
-                        <StackPanel Padding="16" VerticalAlignment="Center">
-                            <Canvas Width="216" Height="216">
-                                <Image Source="ms-appx:///Assets/desktop.svg" Width="200" Height="200" Canvas.Left="16" Canvas.Top="16" />
-                                <Image Source="ms-appx:///Assets/lock.svg" Visibility="{x:Bind NotPaired}" Width="96" Height="96" Canvas.Left="70" Canvas.Top="50" />
-                                <Image Source="ms-appx:///Assets/disconnected.svg" Visibility="{x:Bind NotConnected}" Width="96" Height="96" Canvas.Left="70" Canvas.Top="50" />
-                                <Grid Width="216" Height="216" Canvas.Left="0" Canvas.Top="0" Visibility="{x:Bind WolPollingVisibility}">
-                                    <Rectangle Fill="#80000000" Width="216" Height="216" />
-                                    <muxc:ProgressRing IsActive="True" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Grid>
-                            </Canvas>
-                            <TextBlock Text="{x:Bind ComputerName}"></TextBlock>
-                        </StackPanel>
-                        <muxc:ProgressBar IsIndeterminate="True" Visibility="{x:Bind WolPollingVisibility}"></muxc:ProgressBar>
-                    </StackPanel>
+                    <Border Style="{StaticResource HostCardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" MinHeight="168">
+                                <Border Width="148" Height="148" CornerRadius="74"
+                                        Background="#0AFFFFFF" BorderBrush="#1AFFFFFF" BorderThickness="1"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="ms-appx:///Assets/desktop.svg" Stretch="Uniform" Width="102" Height="102"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.96" />
+                                </Border>
+                                <Image Source="ms-appx:///Assets/lock.svg" Visibility="{x:Bind NotPaired}" Width="64" Height="64"
+                                       HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                <Image Source="ms-appx:///Assets/disconnected.svg" Visibility="{x:Bind NotConnected}" Width="64" Height="64"
+                                       HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                <Border Visibility="{x:Bind WolPollingVisibility}" Background="#99070A12" CornerRadius="12">
+                                    <muxc:ProgressRing IsActive="True" Width="56" Height="56" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1" Spacing="8" Padding="0,12,0,0">
+                                <TextBlock Text="{x:Bind ComputerName}" Style="{StaticResource CardTitleStyle}"></TextBlock>
+                                <muxc:ProgressBar IsIndeterminate="True" Visibility="{x:Bind WolPollingVisibility}"></muxc:ProgressBar>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
