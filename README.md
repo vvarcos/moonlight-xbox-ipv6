@@ -114,7 +114,7 @@ desenvolvedor** do Xbox.
 
    | Arquivo | Para que serve |
    | --- | --- |
-   | `moonlight-xbox-dx_1.18.3.0_x64.msixbundle` | o aplicativo |
+   | `moonlight-xbox-..._x64.msixbundle` | o aplicativo |
    | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
    | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
 
@@ -147,8 +147,6 @@ desenvolvedor** do Xbox.
 
 ## ❌ O que não funciona
 
-- **Wake-on-LAN por IPv6** — o pacote mágico é um broadcast, que é IPv4. Se o host
-  só responde por IPv6, ligue-o manualmente.
 - **Descoberta automática por IPv6** — o mDNS do app só procura hosts IPv4. Hosts em
   outra rede precisam ser adicionados **manualmente** (o que já seria o caso).
 - **Mouse de hardware** (limitação do UWP).
