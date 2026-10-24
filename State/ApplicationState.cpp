@@ -2,6 +2,7 @@
 #include "ApplicationState.h"
 #include <Utils.hpp>
 #include <nlohmann/json.hpp>
+#include <thread>
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
@@ -128,16 +129,28 @@ Concurrency::task<void> moonlight_xbox_dx::ApplicationState::UpdateFile()
 }
 
 void moonlight_xbox_dx::ApplicationState::RemoveHost(MoonlightHost^ host) {
-	if (host == nullptr)return;
+	if (host == nullptr) return;
 	unsigned int index;
 	bool found = SavedHosts->IndexOf(host, &index);
 	SavedHosts->RemoveAt(index);
-	if (!host->Connected) {
-		host->Connect();
-	}
+
+	// Remove localmente IMEDIATAMENTE da UI.
+	// Unpair no host é "best effort" - não bloqueia a UI nem threads do pool.
+	// Usamos uma task separada com timeout explícito para não prender recursos.
 	if (host->Connected) {
-		host->Unpair();
+		// Fire-and-forget: roda em thread separada com timeout curto
+		// Não usamos create_task para não ocupar threads do PPL thread pool
+		std::thread([host]() {
+			try {
+				// O gs_unpair agora tem timeout interno de 3s connect / 5s total
+				host->Unpair();
+			}
+			catch (...) {
+				// Ignora: host offline, timeout, rede, etc.
+			}
+		}).detach();
 	}
+
 	UpdateFile();
 }
 

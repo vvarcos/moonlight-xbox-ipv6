@@ -529,6 +529,15 @@ int gs_unpair(PSERVER_DATA server) {
   uuid_unparse(&uuid, uuid_str);
   snprintf(url, sizeof(url), "http://%s:%u/unpair?uniqueid=%s&uuid=%s", server->urlHost, server->httpPort, unique_id, uuid_str);
   CURL* curl = get_curl_handle();
+
+  // Short timeout for unpair since it's "best effort" - don't block for long
+  // if host is unreachable. 3 seconds connect timeout, 5 seconds total.
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3L);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+  // Also set low speed limit to abort stalled connections quickly
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 3L);
+
   ret = http_request(curl, url, data);
 
   http_free_data(data);
