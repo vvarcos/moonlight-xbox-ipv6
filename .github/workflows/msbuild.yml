@@ -186,12 +186,14 @@ jobs:
       
     - name: Anexar o certificado ao pacote
       # O certificado só existe em builds de fork (gerado no passo "Load
-      # Certificate (fork)"). Ele é publicado junto com o pacote para que possa
-      # ser confiado no Windows e no Xbox antes de instalar.
+      # Certificate (fork)"). Ele é publicado junto com o pacote para poder ser
+      # confiado no Windows antes de instalar (o Xbox não precisa dele).
       run: |
         if (Test-Path cert.cer) {
           New-Item -ItemType Directory -Force -Path output | Out-Null
           Copy-Item cert.cer output\cert.cer -Force
+          # o MSBuild também deixa uma cópia com o nome do pacote: mantemos só cert.cer
+          Get-ChildItem output -Filter *.cer | Where-Object { $_.Name -ne 'cert.cer' } | Remove-Item -Force
         }
 
     - name: Upload artifacts
@@ -240,19 +242,19 @@ jobs:
           ### Instalação no Xbox
 
           1. Ative o **Modo de Desenvolvedor** no console.
-          2. Confie no `cert.cer` pelo **Xbox Device Portal** (Certificados).
-          3. Envie o `.msixbundle` pelo Device Portal ou instale remotamente.
-             Se o console pedir dependências, use os `.appx` da pasta `Dependencies`.
+          2. No **Xbox Device Portal**, instale primeiro as dependências
+             (`Microsoft.UI.Xaml.2.7.appx` e `Microsoft.VCLibs.x64.14.00.appx`).
+          3. Envie o `.msixbundle` em **Apps** — não é preciso instalar certificado
+             no console.
 
           ### Observações
 
-          - O certificado é gerado a cada build, então o `cert.cer` desta versão é
-            diferente do de versões anteriores — confie no certificado da release
-            que você for instalar.
+          - Só o Windows precisa do `cert.cer`. Ele é gerado a cada build, então
+            confie sempre no certificado anexado à release que você for instalar.
           - É necessário ter um host Sunshine (ou GeForce Experience) na rede,
             acessível por IPv4 ou IPv6.
         fail_on_unmatched_files: false
         files: |
           output/**/*.msixbundle
           output/**/*.appx
-          output/**/*.cer
+          output/cert.cer

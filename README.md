@@ -113,7 +113,7 @@ Baixe tudo na página de **[Releases](../../releases)**:
 | Arquivo | Para que serve |
 | --- | --- |
 | `moonlight-xbox-dx_1.19.1.0_x64.msixbundle` | o aplicativo |
-| `cert.cer` | certificado que assinou o pacote (precisa ser confiável) |
+| `cert.cer` | certificado do pacote — usado **só no Windows** |
 | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
 | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
 
@@ -141,16 +141,16 @@ Baixe tudo na página de **[Releases](../../releases)**:
 2. Abra o **Device Portal** (`https://<IP-do-Xbox>:11443`) e instale **primeiro as
    duas dependências**. Elas são assinadas pela Microsoft e instalam como pacote
    normal, sem precisar confiar em nenhum certificado extra.
-3. Instale o aplicativo. Duas opções:
-   - **Pacote assinado** — confie antes no `cert.cer` pelo gerenciador de
-     certificados do Device Portal e envie o `.msixbundle`.
-   - **Loose / register (modo dev)** — extraia o
-     `moonlight-xbox-dx_1.19.1.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
-     arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
-     Neste caminho **não há verificação de assinatura** — não precisa de certificado.
+3. Envie o `.msixbundle` em **Apps**. O console **não precisa** de certificado
+   instalado.
 
-> O `cert.cer` é gerado a cada build, então ele muda de uma release para outra:
-> confie sempre no certificado da versão que você for instalar.
+   Alternativa (**loose / register**): extraia o
+   `moonlight-xbox-dx_1.19.1.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
+   arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
+   Neste caminho também não há verificação de assinatura.
+
+> O `cert.cer` é usado **só no Windows 10/11**. Ele é gerado a cada build, então
+> confie sempre no certificado anexado à release que você for instalar.
 
 ## ✨ Novidades desta build (v1.19.1)
 
