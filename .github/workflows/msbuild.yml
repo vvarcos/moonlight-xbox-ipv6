@@ -85,9 +85,11 @@ jobs:
         # generate a self signed certificate in pfx format
         
         # https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing#use-new-selfsignedcertificate-to-create-a-certificate
+        # O subject PRECISA ser igual ao Publisher do Package.appxmanifest,
+        # senão o empacotamento falha na assinatura.
         $cert = New-SelfSignedCertificate `
           -Type Custom `
-          -Subject "CN=CE07B73A-712E-4E05-932B-D08CE2C8A87C" `
+          -Subject "CN=MoonlightXbox" `
           -KeyUsage DigitalSignature `
           -FriendlyName "MoonlightUWP" `
           -CertStoreLocation "Cert:\LocalMachine\My" `
@@ -182,6 +184,16 @@ jobs:
           Remove-Item -path cert.pfx
         }
       
+    - name: Anexar o certificado ao pacote
+      # O certificado só existe em builds de fork (gerado no passo "Load
+      # Certificate (fork)"). Ele é publicado junto com o pacote para que possa
+      # ser confiado no Windows e no Xbox antes de instalar.
+      run: |
+        if (Test-Path cert.cer) {
+          New-Item -ItemType Directory -Force -Path output | Out-Null
+          Copy-Item cert.cer output\cert.cer -Force
+        }
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -192,14 +204,55 @@ jobs:
     - name: Publish release
       # Runs only when a tag like v1.0.0 is pushed. Attaches the built package
       # to a GitHub Release so it can be downloaded without logging in.
-      # NOTE: the signing certificate (cert.cer) is intentionally NOT published;
-      # it can be extracted from the .msixbundle (AppxSignature.p7x) if needed.
       if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v2
       with:
-        name: ${{ github.ref_name }}
-        generate_release_notes: true
+        name: Moonlight UWP ${{ github.ref_name }}
+        body: |
+          Pacote UWP `x64` para **Xbox** (modo de desenvolvedor) e **Windows 10/11**.
+
+          ### O que há de novo em 1.19.1
+
+          - **Exclusão de host instantânea**: remover um host não trava mais a
+            interface. O unpair virou "melhor esforço" (3 s para conectar, 5 s no
+            total) e roda em segundo plano.
+          - **Suporte a IPv6** para hosts remotos (Sunshine com IPv6).
+          - **Nova tela inicial** e **novos ícones** do aplicativo.
+          - **Comandos do Windows** no menu Select + Start durante o stream.
+          - **Identidade própria do pacote** (`MoonlightXbox.MoonlightUWPLocal`),
+            então ele convive com a versão da Microsoft Store.
+
+          ### Instalação no Windows
+
+          1. Confie no certificado `cert.cer` (Autoridades de Raiz Confiáveis):
+
+             ```powershell
+             Import-Certificate -FilePath .\cert.cer -CertStoreLocation Cert:\LocalMachine\Root
+             ```
+
+          2. Instale o `moonlight-xbox-dx_1.19.1.0_x64.msixbundle` com duplo clique
+             ou:
+
+             ```powershell
+             Add-AppxPackage .\moonlight-xbox-dx_1.19.1.0_x64.msixbundle
+             ```
+
+          ### Instalação no Xbox
+
+          1. Ative o **Modo de Desenvolvedor** no console.
+          2. Confie no `cert.cer` pelo **Xbox Device Portal** (Certificados).
+          3. Envie o `.msixbundle` pelo Device Portal ou instale remotamente.
+             Se o console pedir dependências, use os `.appx` da pasta `Dependencies`.
+
+          ### Observações
+
+          - O certificado é gerado a cada build, então o `cert.cer` desta versão é
+            diferente do de versões anteriores — confie no certificado da release
+            que você for instalar.
+          - É necessário ter um host Sunshine (ou GeForce Experience) na rede,
+            acessível por IPv4 ou IPv6.
         fail_on_unmatched_files: false
         files: |
           output/**/*.msixbundle
           output/**/*.appx
+          output/**/*.cer
