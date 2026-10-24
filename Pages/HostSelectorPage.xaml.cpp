@@ -56,15 +56,63 @@ void HostSelectorPage::NewHostButton_Click(Platform::Object^ sender, Windows::UI
 void HostSelectorPage::OnNewHostDialogPrimaryClick(Windows::UI::Xaml::Controls::ContentDialog^ sender, Windows::UI::Xaml::Controls::ContentDialogButtonClickEventArgs^ args)
 {
 	sender->IsPrimaryButtonEnabled = false;
+	sender->IsSecondaryButtonEnabled = false;
 	Platform::String^ hostname = dialogHostnameTextBox->Text;
+
+	// Troca o conteudo do dialogo por um indicador de carregamento. Sem isso o
+	// dialogo fica parado por varios segundos (as vezes minutos) enquanto o
+	// connect falha, e a impressao e de que o app travou.
+	auto loadingPanel = ref new StackPanel();
+	loadingPanel->Spacing = 18;
+	loadingPanel->HorizontalAlignment = Windows::UI::Xaml::HorizontalAlignment::Center;
+	loadingPanel->VerticalAlignment = Windows::UI::Xaml::VerticalAlignment::Center;
+
+	auto ring = ref new ProgressRing();
+	ring->IsActive = true;
+	ring->Width = 64;
+	ring->Height = 64;
+
+	auto loadingText = ref new TextBlock();
+	loadingText->Text = "Connecting to " + hostname + "...";
+	loadingText->HorizontalAlignment = Windows::UI::Xaml::HorizontalAlignment::Center;
+	loadingText->TextWrapping = TextWrapping::Wrap;
+	loadingText->Opacity = 0.85;
+
+	loadingPanel->Children->Append(ring);
+	loadingPanel->Children->Append(loadingText);
+
+	sender->Content = loadingPanel;
+	sender->PrimaryButtonText = "Connecting...";
+
 	auto def = args->GetDeferral();
 	Concurrency::create_task([def, hostname, this, args, sender]() {
 		bool status = state->AddHost(hostname);
 		if (!status) {
 			Platform::WeakReference weakThis(this);
-			concurrency::create_task(Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([sender, weakThis, hostname, def, args]() {
+			auto textBox = dialogHostnameTextBox;
+			concurrency::create_task(Windows::ApplicationModel::Core::CoreApplication::MainView->CoreWindow->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([sender, weakThis, hostname, def, args, textBox]() {
 				args->Cancel = true;
-				sender->Content = L"Failed to Connect to " + hostname;
+
+				// Devolve o campo de texto para a pessoa corrigir o endereco sem
+				// ter que fechar e abrir o dialogo de novo.
+				auto errorPanel = ref new StackPanel();
+				errorPanel->Spacing = 10;
+
+				auto errorText = ref new TextBlock();
+				errorText->Text = "Could not connect to " + hostname + ". Check the address and try again.";
+				errorText->TextWrapping = TextWrapping::Wrap;
+				errorText->Foreground = ref new SolidColorBrush(Windows::UI::ColorHelper::FromArgb(255, 255, 110, 110));
+				errorPanel->Children->Append(errorText);
+				errorPanel->Children->Append(textBox);
+
+				sender->Content = errorPanel;
+				sender->PrimaryButtonText = "Ok";
+				sender->IsPrimaryButtonEnabled = true;
+				sender->IsSecondaryButtonEnabled = true;
+
+				textBox->SelectAll();
+				textBox->Focus(Windows::UI::Xaml::FocusState::Programmatic);
+
 				def->Complete();
 				}))) .then([](concurrency::task<void> t) {
 				try {

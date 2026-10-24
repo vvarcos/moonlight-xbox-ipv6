@@ -213,16 +213,16 @@ jobs:
         body: |
           Pacote UWP `x64` para **Xbox** (modo de desenvolvedor) e **Windows 10/11**.
 
-          ### O que há de novo em 1.19.1
+          ### O que há de novo em 1.19.2
 
-          - **Exclusão de host instantânea**: remover um host não trava mais a
-            interface. O unpair virou "melhor esforço" (3 s para conectar, 5 s no
-            total) e roda em segundo plano.
-          - **Suporte a IPv6** para hosts remotos (Sunshine com IPv6).
-          - **Nova tela inicial** e **novos ícones** do aplicativo.
-          - **Comandos do Windows** no menu Select + Start durante o stream.
-          - **Identidade própria do pacote** (`MoonlightXbox.MoonlightUWPLocal`),
-            então ele convive com a versão da Microsoft Store.
+          - **Adicionar host com indicador de carregamento**: ao adicionar um host
+            offline o app mostra um spinner com o endereço digitado, em vez de
+            parecer travado. Se falhar, o campo volta preenchido e o erro aparece
+            em vermelho, pronto para corrigir.
+          - **Falha rápida quando o host não responde**: 8 s para conectar e 20 s
+            para a resposta do `/serverinfo` (antes o curl podia levar minutos).
+          - Exclusão de host instantânea, suporte a IPv6, nova tela inicial, novos
+            ícones e comandos do Windows no menu Select + Start (herdados da 1.19.1).
 
           ### Instalação no Windows
 
@@ -232,11 +232,11 @@ jobs:
              Import-Certificate -FilePath .\cert.cer -CertStoreLocation Cert:\LocalMachine\Root
              ```
 
-          2. Instale o `moonlight-xbox-dx_1.19.1.0_x64.msixbundle` com duplo clique
+          2. Instale o `moonlight-xbox-dx_1.19.2.0_x64.msixbundle` com duplo clique
              ou:
 
              ```powershell
-             Add-AppxPackage .\moonlight-xbox-dx_1.19.1.0_x64.msixbundle
+             Add-AppxPackage .\moonlight-xbox-dx_1.19.2.0_x64.msixbundle
              ```
 
           ### Instalação no Xbox

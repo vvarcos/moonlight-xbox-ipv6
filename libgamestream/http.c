@@ -106,6 +106,10 @@ CURL* get_curl_handle() {
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0L);
+    // Bound connection establishment. Without this, reaching a host that is
+    // offline (or that silently drops packets) makes the caller wait for
+    // minutes: curl's default connect timeout is 300 seconds.
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 8L);
     return curl;
 }
 

@@ -112,7 +112,7 @@ Baixe tudo na página de **[Releases](../../releases)**:
 
 | Arquivo | Para que serve |
 | --- | --- |
-| `moonlight-xbox-dx_1.19.1.0_x64.msixbundle` | o aplicativo |
+| `moonlight-xbox-dx_1.19.2.0_x64.msixbundle` | o aplicativo |
 | `cert.cer` | certificado do pacote — usado **só no Windows** |
 | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
 | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
@@ -128,7 +128,7 @@ Baixe tudo na página de **[Releases](../../releases)**:
 2. Instale o pacote (duplo clique no `.msixbundle` ou):
 
    ```powershell
-   Add-AppxPackage .\moonlight-xbox-dx_1.19.1.0_x64.msixbundle
+   Add-AppxPackage .\moonlight-xbox-dx_1.19.2.0_x64.msixbundle
    ```
 
 > O pacote tem identidade própria (`MoonlightXbox.MoonlightUWPLocal`), então
@@ -145,14 +145,23 @@ Baixe tudo na página de **[Releases](../../releases)**:
    instalado.
 
    Alternativa (**loose / register**): extraia o
-   `moonlight-xbox-dx_1.19.1.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
+   `moonlight-xbox-dx_1.19.2.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
    arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
    Neste caminho também não há verificação de assinatura.
 
 > O `cert.cer` é usado **só no Windows 10/11**. Ele é gerado a cada build, então
 > confie sempre no certificado anexado à release que você for instalar.
 
-## ✨ Novidades desta build (v1.19.1)
+## ✨ Novidades desta build (v1.19.2)
+
+- **Adicionar host com indicador de carregamento** — ao tentar adicionar um host
+  offline o app mostra um spinner com o endereço digitado, em vez de ficar sem
+  resposta e parecer travado. Se a conexão falhar, o campo volta preenchido e o
+  erro aparece em vermelho, pronto para corrigir.
+- **Falha rápida quando o host não responde** — 8 s para conectar e 20 s para a
+  resposta do `/serverinfo`; antes o curl podia levar minutos até desistir.
+
+### v1.19.1
 
 - **Exclusão de host instantânea** — remover um host não trava mais a interface.
   O unpair agora é *best effort* (3 s para conectar, 5 s no total) e roda em

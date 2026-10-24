@@ -290,6 +290,9 @@ static int load_serverinfo(PSERVER_DATA server, bool https) {
     ret = GS_OUT_OF_MEMORY;
     goto cleanup;
   }
+  // A host that accepts the connection but never answers must not keep the
+  // caller (and the UI spinner) waiting for minutes.
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
   if (http_request(curl, url, data) != GS_OK) {
     ret = GS_IO_ERROR;
     goto cleanup;
