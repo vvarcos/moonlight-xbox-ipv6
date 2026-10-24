@@ -106,35 +106,63 @@ Se o endereço não for alcançável, o próprio diálogo mostra
 ## 📦 Instalação
 
 O app não é distribuído na Store com IPv6, então ele é instalado pelo **modo
-desenvolvedor** do Xbox.
+desenvolvedor** do Xbox — ou diretamente no **Windows 10/11**.
+
+Baixe tudo na página de **[Releases](../../releases)**:
+
+| Arquivo | Para que serve |
+| --- | --- |
+| `moonlight-xbox-dx_1.19.1.0_x64.msixbundle` | o aplicativo |
+| `cert.cer` | certificado que assinou o pacote (precisa ser confiável) |
+| `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
+| `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
+
+### 🖥️ No Windows 10/11
+
+1. Confie no certificado (PowerShell **como administrador**):
+
+   ```powershell
+   Import-Certificate -FilePath .\cert.cer -CertStoreLocation Cert:\LocalMachine\Root
+   ```
+
+2. Instale o pacote (duplo clique no `.msixbundle` ou):
+
+   ```powershell
+   Add-AppxPackage .\moonlight-xbox-dx_1.19.1.0_x64.msixbundle
+   ```
+
+> O pacote tem identidade própria (`MoonlightXbox.MoonlightUWPLocal`), então
+> convive com a versão da Microsoft Store.
+
+### 🎮 No Xbox (modo desenvolvedor)
 
 1. Ative o **Dev Mode** no console:
    <https://learn.microsoft.com/windows/uwp/xbox-apps/devkit-activation>
-2. Baixe os arquivos na página de **[Releases](../../releases)**:
-
-   | Arquivo | Para que serve |
-   | --- | --- |
-   | `moonlight-xbox-dx_1.19.0.0_x64.msixbundle` | o aplicativo |
-   | `Microsoft.UI.Xaml.2.7.appx` | dependência (framework) |
-   | `Microsoft.VCLibs.x64.14.00.appx` | dependência (framework) |
-
-3. Abra o **Device Portal** (`https://<IP-do-Xbox>:11443`) e instale **primeiro as
+2. Abra o **Device Portal** (`https://<IP-do-Xbox>:11443`) e instale **primeiro as
    duas dependências**. Elas são assinadas pela Microsoft e instalam como pacote
    normal, sem precisar confiar em nenhum certificado extra.
-4. Instale o aplicativo. Duas opções:
+3. Instale o aplicativo. Duas opções:
+   - **Pacote assinado** — confie antes no `cert.cer` pelo gerenciador de
+     certificados do Device Portal e envie o `.msixbundle`.
    - **Loose / register (modo dev)** — extraia o
-     `moonlight-xbox-dx_1.19.0.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
+     `moonlight-xbox-dx_1.19.1.0_x64.msix` de dentro do `.msixbundle` (o bundle é um
      arquivo zip), copie a pasta para o console e registre o `AppxManifest.xml`.
      Neste caminho **não há verificação de assinatura** — não precisa de certificado.
-   - **Pacote assinado** — instale o `.msixbundle` direto, caso o certificado que
-     assinou o pacote seja confiável no console.
 
-   > O certificado **não** é publicado nas Releases. Se precisar dele, dá para
-   > extrair da assinatura do próprio pacote: botão direito no `.msixbundle` →
-   > **Propriedades** → **Assinaturas Digitais** → selecionar a assinatura →
-   > **Detalhes** → **Exibir Certificado** → **Detalhes** → **Copiar para Arquivo…**
+> O `cert.cer` é gerado a cada build, então ele muda de uma release para outra:
+> confie sempre no certificado da versão que você for instalar.
 
-## ✨ Novidades desta build (v1.19.0)
+## ✨ Novidades desta build (v1.19.1)
+
+- **Exclusão de host instantânea** — remover um host não trava mais a interface.
+  O unpair agora é *best effort* (3 s para conectar, 5 s no total) e roda em
+  segundo plano.
+- **Identidade própria do pacote** — `MoonlightXbox.MoonlightUWPLocal`, o que
+  permite instalar no PC sem conflitar com a versão da Microsoft Store.
+- **Ícones novos** — conjunto completo com gradiente azul→teal e lua crescente.
+- **Instalação no Windows 10/11** documentada (antes só havia o caminho do Xbox).
+
+### v1.19.0
 
 - **Interface redesenhada** — fundo com gradiente escuro, cards de host com borda
   arredondada e destaque de foco, e a lista de aplicativos com **tiles em cartão**
